@@ -1,0 +1,419 @@
+/* Estilos generales para todos los elementos */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-align: center;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Estilos para el cuerpo de la página */
+body {
+    background-color: #f0f0f0; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh; /* Asegurarse que el cuerpo ocupe al menos el 100% de la altura de la ventana */
+    padding: 20px;
+}
+
+/* Estilos para el título principal */
+h1 {
+    font-size: 4rem; /* Tamaño grande para pantallas grandes */
+    color: #333;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos para el subtítulo */
+h2 {
+    font-size: 2rem; /* Tamaño grande para pantallas grandes */
+    color: #555;
+    margin-bottom: 30px;
+}
+
+/* Estilos para la puntuación más alta */
+h4 {
+    font-size: 1.5rem; /* Tamaño grande para pantallas grandes */
+    color: #777;
+    margin-bottom: 15px;
+}
+
+h3 {
+    font-size: 2rem; /* Tamaño grande para pantallas grandes */
+    color: #333;
+    margin-bottom: 30px;
+}
+
+/* Contenedor para los botones de colores */
+.colours {
+    display: flex;
+    flex-direction: row; /* Disposición horizontal */
+    gap: 20px; /* Espacio entre botones */
+    justify-content: center;
+    flex-wrap: wrap /* Para que los botones se ajusten en pantallas pequeñas */
+}
+
+/* Estilos base para los botones de colores */
+.btns {
+    height: 150px; /* Tamaño grande para pantallas grandes */
+    width: 150px; /* Tamaño grande para pantallas grandes */
+    border-radius: 20px; /* Bordes más redondeados */
+    border: 3px solid #000; /* Borde más grueso */
+    margin: 10px; /* Margen alrededor de los botones */
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+/* Efecto hover para los botones */
+.btns:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Sombra más pronunciada */
+}
+
+/* Estilos específicos para cada color */
+.red {
+    background-color: #ff0000;
+}
+
+.yellow {
+    background-color: #ffff66;
+}
+
+.orange {
+    background-color: #ffa64d;
+}
+
+.pink {
+    background-color: #ff66b3;
+}
+
+.blue {
+    background-color: #0000ff;
+}
+
+.purple {
+    background-color: #800080;
+}
+
+.green {
+    background-color: #66ff66;
+}
+
+.brown {
+    background-color: #996633;
+}
+
+/* Estilos para los nuevos colores */
+.cyan {
+    background-color: #00ffff; /* Cian */
+}
+
+.teal {
+    background-color: #008080; /* Verde azulado */
+}
+
+.gray {
+    background-color: #c0c0c0; /* Gris */
+}
+
+.black {
+    background-color: #000000; /* Negro */
+}
+
+/* Estilos para el efecto de parpadeo (flash) */
+.flash {
+    opacity: 0.2; /* Hacemos el flash más notorio */
+    background-color: white; /* Cambiamos el fondo a blanco durante el flash */
+    transition: opacity 0.2s ease;
+}
+
+/* Estilos para el efecto de parpadeo del usuario (userflash) */
+.userflash {
+    background-color: black; /* Cambiamos el fondo a negro durante el userflash */
+    opacity: 0.2; /* Hacemos el userflash más notorio */
+    transition: opacity 0.2s ease;
+}
+
+/* Media Queries para diseño responsive */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 3rem; /* Reducimos el tamaño del título en pantallas más pequeñas */
+    }
+
+    h2 {
+        font-size: 1.5rem; /* Reducimos el tamaño del subtítulo en pantallas más pequeñas */
+    }
+
+    h3 {
+        font-size: 1.5rem; /* Reducimos el tamaño de la puntuación en pantallas más pequeñas */
+    }
+
+    h4 {
+        font-size: 1.2rem; /* Reducimos el tamaño del texto en pantallas más pequeñas */
+    }
+
+    .btns {
+        height: 100px; /* Reducimos el tamaño de los botones en pantallas más pequeñas */
+        width: 100px;
+    }
+
+    .colours {
+        gap: 10px; /* Reducimos el espacio entre botones en pantallas más pequeñas */
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 2rem; /* Tamaño aún más pequeño para pantallas muy pequeñas */
+    }
+
+    h2 {
+        font-size: 1.2rem; /* Tamaño aún más pequeño para pantallas muy pequeñas */
+    }
+
+    h3 {
+        font-size: 1.2rem; /* Tamaño aún más pequeño para pantallas muy pequeñas */
+    }
+
+    h4 {
+        font-size: 1rem; /* Tamaño aún más pequeño para pantallas muy pequeñas */
+    }
+
+    .btns {
+        height: 70px; /* Tamaño aún más pequeño para pantallas muy pequeñas */
+        width: 70px;
+    }
+
+    .colours {
+        gap: 5px; /* Espacio aún más reducido entre botones */
+    }
+
+    /* Ajustes para reorganizar los botones en pantallas muy pequeñas */
+    .colours {
+        display: flex;
+        flex-wrap: wrap; /* Permitimos que los botones se ajusten en filas */
+        gap: 5px; /* Espacio reducido entre los botones */
+        justify-content: center; /* Centramos los botones */
+    }
+
+    /* Movemos el plateado y el negro a la fila del café */
+    .row4 .silver,
+    .row4 .black {
+        order: 1; /* Colocamos plateado y negro después del café */
+    }
+
+    .row4 .green {
+        order: 0; /* El verde se mantiene en su posición */
+    }
+
+    .row4 .brown {
+        order: 0; /* El café se mantiene en su posición */
+    }
+}
+
+/* Estilos para h3 y enlaces */
+h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+h3 a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+h3 a:hover {
+    color: #0056b3;
+}
+
+/* Estilos para el botón de inicio/reinicio */
+#startButton {
+    background-color: #007bff; /* Azul */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    transition: background-color 0.3s ease;
+}
+
+#startButton:hover {
+    background-color: #0056b3; /* Azul más oscuro al pasar el mouse */
+}
+
+/* Estilos para el modal */
+.modal {
+    display: none; /* Oculto por defecto */
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+    border-radius: 10px;
+}
+
+.modal-content button {
+    margin: 10px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+}
+
+#confirmUser {
+    background-color: #007bff;
+    color: white;
+}
+
+#cancelUser {
+    background-color: #dc3545;
+    color: white;
+}
+.modalSalir {
+    display: none;
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+}
+
+.modal-salir {
+    background-color: #f44336;
+    color: white;
+    margin: 15% auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 400px;
+    text-align: center;
+    animation: shake 0.5s;
+}
+
+#SalirUser {
+    background-color: white;
+    color: #f44336;
+    border: none;
+    padding: 10px 20px;
+    margin-top: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    50% { transform: translateX(10px); }
+    75% { transform: translateX(-10px); }
+    100% { transform: translateX(0); }
+}
+
+/* ...existing code... */
+#logoutButton {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #dc3545; /* Rojo */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+#logoutButton:hover {
+    background-color: #a71d2a; /* Rojo más oscuro */
+}
+/* ...existing code... */
+
+/* Estilo para el contenedor de usuario */
+#usuarioInfo {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background: rgba(255,255,255,0.95);
+    padding: 16px 22px;
+    border-radius: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    z-index: 100;
+    min-width: 180px;
+}
+
+#fotoUsuario {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-bottom: 8px;
+    object-fit: cover;
+    border: 2px solid #007bff;
+    display: none;
+}
+
+.usuario-nombre {
+    font-weight: bold;
+    color: #007bff;
+    font-size: 18px;
+    margin-bottom: 6px;
+}
+
+.usuario-puntos {
+    font-size: 16px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+#puntosUsuario {
+    font-weight: bold;
+    margin-left: 4px;
+    color: #28a745;
+    font-size: 18px;
+}
+
+@media (max-width: 600px) {
+    #usuarioInfo {
+        position: absolute;
+        margin: 20px auto 0 auto;
+        left: 20px;
+        top: 50px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        min-width: 0;
+        width: 90vw;
+        box-sizing: border-box;
+    }
+    #logoutButton {
+        align-self: center;
+        margin-bottom: 10px;
+    }
+}

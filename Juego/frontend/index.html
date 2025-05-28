@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <!-- Configuración básica del documento -->
+    <meta charset="UTF-8"> <!-- Codificación de caracteres -->
+   <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Configuración para dispositivos móviles -->
+    <title>VIDEOJUEGO DE SIMÓN DICE</title> <!-- Título de la página -->
+    <link rel="stylesheet" href="style.css"> <!-- Enlace al archivo CSS -->
+    <link rel="icon" href="data:,"> <!-- Icono de la pestaña -->
+</head>
+
+<body>
+
+    <!-- Contenedor para nombre y foto de usuario -->
+    <div id="usuarioInfo">
+        <img id="fotoUsuario" style="display:none;" alt="Foto de usuario">
+        <div class="usuario-nombre">
+            Usuario: <span id="nombreUsuarioTexto"></span>
+        </div>
+        <div class="usuario-puntos">
+            Puntos: <h3 id="puntosUsuarioTexto"></h3>
+        </div>
+    </div>
+
+    <!-- Título principal del juego -->
+    <h1>¡¡SIMÓN DICE!!</h1>
+
+    <!-- ...existing code... -->
+    <div id="logoutContainer" class="top-right">
+        <button id="logoutButton">Cerrar Sesión</button>
+    </div>
+    
+<!-- ...existing code... -->
+
+    <!-- Instrucción para comenzar el juego -->
+    <h2>Presiona el botón para empezar</h2>
+
+    <!-- Botón para iniciar/reiniciar el juego -->
+    <button id="startButton">Iniciar Juego</button>
+
+
+    <!-- Contenedor principal para los botones de colores -->
+    <div class="colours">
+
+        <!-- Fila 1 de botones -->
+        <div class="row1">
+            <!-- Botón rojo -->
+            <div class="red btns" type="button" id="red"></div>
+            <!-- Botón amarillo -->
+            <div class="yellow btns" type="button" id="yellow"></div>
+        </div>
+
+        <!-- Fila 2 de botones -->
+        <div class="row2">
+            <!-- Botón rosa -->
+            <div class="pink btns" type="button" id="pink"></div>
+            <!-- Botón naranja -->
+            <div class="orange btns" type="button" id="orange"></div>
+        </div>
+
+        <!-- Fila 3 de botones -->
+        <div class="row3">
+            <!-- Botón azul -->
+            <div class="blue btns" type="button" id="blue"></div>
+            <!-- Botón morado -->
+            <div class="purple btns" type="button" id="purple"></div>
+        </div>
+
+        <!-- Fila 4 de botones -->
+        <div class="row4">
+            <!-- Botón verde -->
+            <div class="green btns" type="button" id="green"></div>
+            <!-- Botón marrón -->
+            <div class="brown btns" type="button" id="brown"></div>
+        </div>
+        
+        <!-- Fila 5 de botones (nuevos colores) -->
+        <div class="row5">
+            <!-- Botón cian -->
+            <div class="cyan btns" type="button" id="cyan"></div>
+            <!-- Botón verde azulado -->
+            <div class="teal btns" type="button" id="teal"></div>
+        </div>
+
+        <!-- Fila 6 de botones (nuevos colores) -->
+        <div class="row6">
+            <!-- Botón gris -->
+            <div class="gray btns" type="button" id="gray"></div>
+            <!-- Botón negro -->
+            <div class="black btns" type="button" id="black"></div>
+        </div>
+    </div>
+    <!-- Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <p>¿Deseas ingresar con el usuario: <span id="confirmUsername"></span>?</p>
+            <button id="confirmUser">Confirmar</button>
+            <button id="cancelUser">Salir</button>
+        </div>
+    </div>
+
+    <div id="Modalsalir" class="modalSalir">
+        <div class="modal-salir">
+            <p>TUS TURNOS HAN TERMINADO <span id="confirmSalir"></span>?</p>
+            <button id="SalirUser">Salir</button>
+        </div>
+    </div>
+
+        <!-- Enlace al archivo JavaScript -->
+    <script src="app.js"></script>
+</body>
+</html>
