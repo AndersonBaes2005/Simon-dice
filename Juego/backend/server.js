@@ -1,5 +1,4 @@
 require('dotenv').config({ path: './backend/.env' });
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const mysql = require('mysql2');
@@ -11,29 +10,38 @@ const cors = require('cors');
 const bcrypt = require('bcrypt');
 const validator = require('validator');
 const passport = require('passport');
-const GoogleStrategy = require('passport-google-oauth20')
-
-
-// Mapa para intentos fallidos y bloqueo temporal (en memoria)
-const loginAttempts = {}; // se usa para almacenar los intentos de inicio de sesión
-const MAX_ATTEMPTS = 5; // número máximo de intentos
-const BLOCK_TIME = 5 * 60 * 1000; // 5 minutos en ms
+const GoogleStrategy = require('passport-google-oauth20');
+// Middleware para verificar si el usuario está autenticado 
+const { OAuth2Client } = require('google-auth-library');
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5000;
+// Mapa para intentos fallidos y bloqueo temporal (en memoria)
+const loginAttempts = {}; // se usa para almacenar los intentos de inicio de sesión
+const MAX_ATTEMPTS = 5; // número máximo de intentos
+const BLOCK_TIME = 5 * 60 * 1000; // 5 minutos en ms
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-
 // Configuración de CORS
 // Permitir solicitudes CORS desde el frontend
 app.use(cors({
     origin: 'http://localhost:5000',
     credentials: true
 }));
+
+// Conexión a la base de datos (si no la tienes ya)
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+}).promise(); // Se agrega .promise() para usar promesas
 
 // Configuración de la sesión con MySQL
 const sessionStore = new MySQLStore({
@@ -43,8 +51,6 @@ const sessionStore = new MySQLStore({
     password: process.env.DB_PASSWORD,
     database: process.env.DB_DATABASE
 });
-
-
 
 // Configuración de la sesión
 app.use(session({
@@ -67,16 +73,6 @@ passport.deserializeUser((user, done) =>{
     done(null, user);
 });
 
-// Conexión a la base de datos (si no la tienes ya)
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-}).promise(); // Se agrega .promise() para usar promesas
 
 // configuracion de la estrategia de google
 // Se usa para autenticar con Google
@@ -85,23 +81,45 @@ passport.use(new GoogleStrategy({
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: "http://localhost:5000/auth/google/callback"
 }, async (acessToken, refreshToken, profile, done) => {
-    
-    const username = profile.emails[0].value.split('@')[0]; // Obtener el nombre de usuario del correo electrónico
 
-    const [rows] = await pool.query('SELECT * FROM usersjuego WHERE nombre = ?', [username]);
+    const correo = profile.emails[0].value; // Obtener el correo electrónico del perfil
+    const nombre = profile.displayName; // Obtener el nombre de usuario del perfil
+
+    const [rows] = await pool.query('SELECT * FROM usersjuego WHERE correo = ?', [correo]);
 
     if (rows.length === 0){
-        await pool.query('INSERT INTO usersjuego (nombre, password) VALUES (?, ?)', [username, 'google_oauth']);
+        await pool.query('INSERT INTO usersjuego (nombre, correo, password) VALUES (?, ?, ?)', [nombre, correo, 'google_oauth']);
     }
 
     // Guardar en la sesion
-    return done(null, {id: profile.id, username});
+    return done(null, {id: profile.id, username: nombre, correo});
 
 }));
 
-// Middleware para verificar si el usuario está autenticado 
-const { OAuth2Client } = require('google-auth-library');
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Middleware para deshabilitar caché en rutas protegidas
+const noCache = (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    next();
+};
+
+// Middleware para verificar si el usuario está autenticado
+const requireAuth = (req, res, next) => {
+    if (req.session && req.session.userId) {
+        return next();
+    } else {
+        // Si la petición es AJAX o espera JSON, responde con JSON
+        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
+            return res.status(401).json({ success: false, message: 'No autenticado' });
+        }
+        // Si es una petición normal, redirige
+        res.redirect('http://localhost:5000/registro');
+    }
+};
+
 
 // Ruta para autenticar con Google y obtener el token
 // Esta ruta es para recibir el token de Google desde el frontend
@@ -120,19 +138,19 @@ app.post('/auth/google/token', async (req, res) => {
         const payload = ticket.getPayload();
 
         // Aquí puedes usar el email como username
-        const username = payload.email;
-        const name = payload.name;
+        const correo = payload.email;
+        const nombre = payload.name;
         const picture = payload.picture;
 
-        let [rows] = await pool.query('SELECT * FROM usersjuego WHERE nombre = ?', [username]);
+        let [rows] = await pool.query('SELECT * FROM usersjuego WHERE correo = ?', [correo]);
         if (rows.length === 0) {
-            await pool.query('INSERT INTO usersjuego (nombre, password, monedas) VALUES (?, ?, ?)', [username, 'google_oauth', 5]);
+            await pool.query('INSERT INTO usersjuego (nombre, correo, password, monedas) VALUES (?, ?, ?, ?)', [nombre, correo, 'google_oauth', 5]);
         }
 
         // Crea la sesión
         req.session.userId = payload.sub; // ID único de Google
-        req.session.username = username;
-        req.session.name = name;
+        req.session.username = nombre; // Para mostrar
+        req.session.correo = correo; // Para identificar
         req.session.picture = picture;
 
         res.json({ success: true, message: 'Autenticación exitosa' });
@@ -260,19 +278,6 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Middleware para verificar si el usuario está autenticado
-const requireAuth = (req, res, next) => {
-    if (req.session && req.session.userId) {
-        return next();
-    } else {
-        // Si la petición es AJAX o espera JSON, responde con JSON
-        if (req.xhr || (req.headers.accept && req.headers.accept.indexOf('json') > -1)) {
-            return res.status(401).json({ success: false, message: 'No autenticado' });
-        }
-        // Si es una petición normal, redirige
-        res.redirect('http://localhost:5000/registro');
-    }
-};
 
 // Ruta para servir la página de registro
 app.get('/registro', (req, res) => {
@@ -285,13 +290,6 @@ app.get('/registro', (req, res) => {
 // Servir archivos estáticos desde la carpeta "frontend"
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Middleware para deshabilitar caché en rutas protegidas
-const noCache = (req, res, next) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    next();
-};
 
 // Ruta para servir la página principal del juego (PROTEGIDA POR AUTENTICACIÓN)
 app.get('/', requireAuth, noCache, (req, res) => {
@@ -300,25 +298,25 @@ app.get('/', requireAuth, noCache, (req, res) => {
 
 // Ruta para actualizar el nivel y los puntos del usuario
 app.post('/actualizar-puntaje', requireAuth, async (req, res) => {
-    const { username, nivel, puntos, monedas } = req.body;
+    const { nivel, puntos, monedas } = req.body;
 
-    if (!username || !nivel || !puntos || monedas === undefined) {
+    if (!nivel || !puntos || monedas === undefined) {
         return res.status(400).json({ success: false, message: 'Datos incompletos' });
     }
 
     try {
-        await pool.query('UPDATE usersjuego SET nivel = ?, puntos = ?, monedas = ? WHERE nombre = ?', [nivel, puntos, monedas, req.session.username]); // Usa req.session.username
+        console.log('Sesión:', req.session); // <-- Agrega esto para depurar
+        await pool.query('UPDATE usersjuego SET nivel = ?, puntos = ?, monedas = ? WHERE correo = ?', [nivel, puntos, monedas, req.session.correo]);
         res.json({ success: true, message: 'Puntaje actualizado exitosamente' });
     } catch (error) {
-        console.error('Error al actualizar el puntaje:', error);
         res.status(500).json({ success: false, message: 'Error al actualizar el puntaje' });
     }
 });
 
-// Ruta para obtener el puntaje del usuario
+// Ruta para obtener las monedas del usuario
 app.post('/get-monedas', requireAuth, async (req, res) => {
     try {
-        const [rows] = await pool.query('SELECT monedas FROM usersjuego WHERE nombre = ?', [req.session.username]);
+        const [rows] = await pool.query('SELECT monedas FROM usersjuego WHERE correo = ?', [req.session.correo]);
         if (rows.length > 0) {
             res.json({ success: true, monedas: rows[0].monedas });
         } else {

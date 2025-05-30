@@ -19,137 +19,6 @@ let black = document.querySelectorAll(".black");
 const startButton = document.getElementById('startButton');
 let monedas = 5;
 
-//Resive el usuario del login mediante localStorage y lo muestra en el modal
-document.addEventListener('DOMContentLoaded', function() {
-    // 1. Obtener el usuario de la URL o localStorage
-    const urlParams = new URLSearchParams(window.location.search);
-    const userFromURL = urlParams.get('user');
-    const username = userFromURL || localStorage.getItem('username') || 'Invitado';
-
-    if (username && username !== 'Invitado') {
-        fetch('/get-monedas', {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Accept': 'application/json' // <-- Agrega esto
-            },
-            credentials: 'include' // <-- Esto es clave para sesiones y se utiliza para enviar cookies
-        })
-        .then(res => {
-            const contentType = res.headers.get('content-type');
-            if (res.status === 401) {
-                // Si no hay sesión, redirige al registro
-                window.location.replace("http://localhost:5000/registro");
-                return Promise.reject('No autenticado');
-            }
-            if (contentType && contentType.includes('application/json')) {
-                return res.json();
-            } else {
-                throw new Error('Respuesta no es JSON');
-            }
-        })
-        .then(data => {
-            if (data.success) {
-                monedas = data.monedas;
-                localStorage.setItem('monedas', monedas);
-                if (monedas <= 0) {
-                    // Deshabilitar el juego si no tiene monedas
-                    startButton.disabled = true;
-                    document.querySelectorAll('.btns').forEach(btn => {
-                        btn.style.pointerEvents = 'none';
-                        btn.style.opacity = '0.5';
-                    });
-                }
-            }
-        });
-    }
-    
-    if (userFromURL) {
-        localStorage.setItem('username', userFromURL); // Guardar para futuras visitas
-    }
-
-    // 2. Mostrar el modal de confirmación o el nombre directamente
-    if (username && username !== 'Invitado') {
-        mostrarConfirmacionUsuario(username); // Mostrar modal de confirmación
-    } else {
-        mostrarNombreUsuario('Invitado'); // Mostrar como invitado
-    }
-
-    const startButton = document.getElementById('startButton');
-    startButton.addEventListener('click', startOrRestartGame);
-
-    // 4. Configurar botones del juego 
-    document.querySelectorAll('.btns').forEach(btn => {
-        btn.addEventListener('click', buttonpress);
-    });
-
-   // 5. Configurar el botón de cerrar sesión
-    document.getElementById('logoutButton').addEventListener('click', function() {
-        fetch('/logout', {
-            method: 'POST',
-            headers: {// este código le dice al servidor (o a quien reciba esta información) que los datos que se están enviando o esperando están estructurados como un objeto JSON.
-                'Content-Type': 'application/json' 
-            },
-        })
-        .then(response =>  {
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                return response.json();
-            } else {
-                throw new Error('Respuesta no es JSON');
-            }
-        })
-        .then(data => {
-            if (data.success) {
-                localStorage.removeItem('username');
-                window.location.replace("http://localhost:5000/registro"); // Usar replace en vez de href y esto evita que el usuario vuelva a la página anterior al hacer clic en "Atrás"
-             } else {
-                console.error('Error al cerrar sesión:', data.message);
-                alert('Error al cerrar sesión');
-            }
-        })
-        .catch(error => { // Adjunta una devolución de llamada solo por el rechazo de la promesa.
-            console.error('Error al cerrar sesión:', error);
-            alert('Error de red al cerrar sesión');
-        });
-    });
-
-
-    // 5. Función para mostrar el nombre en la interfaz
-    function mostrarNombreUsuario(nombre) {
-        const nombreUsuarioTexto = document.getElementById('nombreUsuarioTexto');
-        if (nombreUsuarioTexto) {
-            nombreUsuarioTexto.textContent = nombre;
-        }
-    }
-
-    // 6. Función para mostrar el modal de confirmación
-    function mostrarConfirmacionUsuario(username) {
-        const modal = document.getElementById('confirmModal');
-        const confirmUsername = document.getElementById('confirmUsername');
-        
-        if (modal && confirmUsername) {
-            confirmUsername.textContent = username;
-            modal.style.display = 'block';
-
-            // Botón "Confirmar"
-            document.getElementById('confirmUser').onclick = function() {
-                modal.style.display = 'none';
-                mostrarNombreUsuario(username);
-            };
-
-            // Botón "Salir"
-            document.getElementById('cancelUser').onclick = function() {
-                modal.style.display = 'none';
-                localStorage.removeItem('username');
-                window.location.href = "http://localhost:5000/registro"; // Cambiar ${port} a 5000
-            };
-        }
-    }
-});
-
-
-
 // Variables de estado del juego
 let game = false; // Indica si el juego está en curso
 let level = 0;    // Nivel actual del juego
@@ -159,6 +28,43 @@ let colours = ["red", "orange", "blue", "yellow", "pink", "purple", "green", "br
 let score = 0;
 let highscore = document.querySelector("h3"); // Elemento para mostrar la puntuación más alta
 highscore.textContent = 0;
+
+// 5. Función para mostrar el nombre en la interfaz
+function mostrarNombreUsuario(nombre) {
+        const nombreUsuarioTexto = document.getElementById('nombreUsuarioTexto');
+        if (nombreUsuarioTexto) {
+            nombreUsuarioTexto.textContent = nombre;
+        }
+    }
+
+function mostrarMonedasUsuario(monedas) {
+        const monedasUsuarioTexto = document.getElementById('monedasUsuarioTexto');
+        if (monedasUsuarioTexto) {
+            monedasUsuarioTexto.textContent = monedas;
+        }
+    }
+
+// Modifica actualizarPuntaje para aceptar monedas
+function actualizarPuntaje(nivel, puntos, monedas) {
+    fetch('/actualizar-puntaje', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ nivel, puntos, monedas }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Puntaje actualizado exitosamente');
+        } else {
+            console.error('Error al actualizar el puntaje:', data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
 
 // Función para iniciar o reiniciar el juego
 function startOrRestartGame() {
@@ -179,9 +85,6 @@ function startOrRestartGame() {
         h2.textContent = "¡Presiona el botón para empezar!"; // Muestra un mensaje
     }
 }
-
-// Asigna el evento al botón
-startButton.addEventListener('click', startOrRestartGame);
 
 // Función para hacer parpadear un botón (color)
 function flash(btn) {
@@ -229,13 +132,6 @@ function buttonpress() {
     checkass(userseq.length - 1);        // Verifica si la secuencia del usuario es correcta
 }
 
-// Asigna el evento de clic a todos los botones del juego
-let allbtns = document.querySelectorAll(".btns");
-for (btn of allbtns) {
-    btn.addEventListener("click", buttonpress);
-    console.log(btn); // Muestra el botón en la consola (para depuración)
-}
-
 // Función para verificar si la secuencia del usuario coincide con la del juego
 function checkass(index) {
     if (gameseq[index] == userseq[index]) {
@@ -256,10 +152,12 @@ function checkass(index) {
 function gameover() {
     monedas--;
     localStorage.setItem('monedas', monedas);
+    mostrarMonedasUsuario(monedas);
 
-    // Actualiza las monedas en la base de datos
     const nivelActual = level;
     const puntosActuales = level - 1;
+
+    // Siempre actualiza el puntaje y las monedas en la base de datos
     actualizarPuntaje(nivelActual, puntosActuales, monedas);
 
     if (monedas <= 0) {
@@ -267,7 +165,6 @@ function gameover() {
         const modalSalir = document.getElementById('Modalsalir');
         modalSalir.style.display = 'block';
 
-        // Configurar botón Salir (igual que cerrar sesión)
         document.getElementById('SalirUser').onclick = function() {
             localStorage.removeItem('username');
             localStorage.removeItem('monedas');
@@ -290,37 +187,111 @@ function gameover() {
         game = false;
         userseq = [];
         gameseq = [];
-        const nivelActual = level;
-        const puntosActuales = level - 1;
-
-        actualizarPuntaje(nivelActual, puntosActuales);
-
         h2.innerText = `¡Perdiste! Te quedan ${monedas} intentos. Puntaje: ${puntosActuales}`;
         startButton.textContent = "Reintentar";
     }
 }
 
    
-// Modifica actualizarPuntaje para aceptar monedas
-function actualizarPuntaje(nivel, puntos, monedas) {
-    const nombreUsuario = localStorage.getItem('username') || 'Invitado';
 
-    fetch('/actualizar-puntaje', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username: nombreUsuario, nivel, puntos, monedas }),
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            console.log('Puntaje actualizado exitosamente');
-        } else {
-            console.error('Error al actualizar el puntaje:', data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
+//Resive el usuario del login mediante localStorage y lo muestra en el modal
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Obtener el usuario de la URL o localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const userFromURL = urlParams.get('user');
+    const username = userFromURL || localStorage.getItem('username') || 'Invitado';
+
+        fetch('/get-user', {
+            method: 'GET',
+            credentials: 'include'
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success && data.name) {
+                localStorage.setItem('username', data.name);
+                mostrarNombreUsuario(data.name);
+
+                // Aquí va directamente la petición de monedas, SIN el if extra
+                fetch('/get-monedas', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    credentials: 'include'
+                })
+                .then(res => {
+                    const contentType = res.headers.get('content-type');
+                    if (res.status === 401) {
+                        window.location.replace("http://localhost:5000/registro");
+                        return Promise.reject('No autenticado');
+                    }
+                    if (contentType && contentType.includes('application/json')) {
+                        return res.json();
+                    } else {
+                        throw new Error('Respuesta no es JSON');
+                    }
+                })
+                .then(data => {
+                    if (data.success) {
+                        monedas = data.monedas;
+                        localStorage.setItem('monedas', monedas);
+                        mostrarMonedasUsuario(monedas);
+                        if (monedas <= 0) {
+                            startButton.disabled = true;
+                            document.querySelectorAll('.btns').forEach(btn => {
+                                btn.style.pointerEvents = 'none';
+                                btn.style.opacity = '0.5';
+                            });
+                        }
+                    }
+                });
+            } else {
+                mostrarNombreUsuario('Invitado');
+            }
+});
+    
+    if (userFromURL) {
+        localStorage.setItem('username', userFromURL); // Guardar para futuras visitas
+    }
+
+    
+    // 4. Configurar botones del juego 
+    document.querySelectorAll('.btns').forEach(btn => {
+        btn.addEventListener('click', buttonpress);
     });
-}
+
+     startButton.addEventListener('click', startOrRestartGame);
+
+   // 5. Configurar el botón de cerrar sesión
+    document.getElementById('logoutButton').addEventListener('click', function() {
+        fetch('/logout', {
+            method: 'POST',
+            headers: {// este código le dice al servidor (o a quien reciba esta información) que los datos que se están enviando o esperando están estructurados como un objeto JSON.
+                'Content-Type': 'application/json' 
+            },
+        })
+        .then(response =>  {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return response.json();
+            } else {
+                throw new Error('Respuesta no es JSON');
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                localStorage.removeItem('username');
+                window.location.replace("http://localhost:5000/registro"); // Usar replace en vez de href y esto evita que el usuario vuelva a la página anterior al hacer clic en "Atrás"
+             } else {
+                console.error('Error al cerrar sesión:', data.message);
+                alert('Error al cerrar sesión');
+            }
+        })
+        .catch(error => { // Adjunta una devolución de llamada solo por el rechazo de la promesa.
+            console.error('Error al cerrar sesión:', error);
+            alert('Error de red al cerrar sesión');
+        });
+    });
+
+});

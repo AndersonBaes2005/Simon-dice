@@ -404,7 +404,7 @@ h3 a:hover {
         position: absolute;
         margin: 20px auto 0 auto;
         left: 20px;
-        top: 50px;
+        top: 40px;
         display: flex;
         flex-direction: column;
         align-items: center;
